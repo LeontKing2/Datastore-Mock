@@ -1,2 +1,5 @@
-RewriteEngine on
-RewriteRule ^datastore/([^/]+)/([^/]+)/?$ /datastore.php?scope=$1&name=$2 [QSA,L]
+RewriteEngine On
+# 17/04/2023 18:58 IST Signed By ARD
+# Match URLs like /datastore/global/example
+# and rewrite them to /datastore.php/global/example
+RewriteRule ^datastore/([^/]+)/([^/]+)/?$ /datastore.php?scope=$1&name=$2 [L,QSA]
