@@ -1,0 +1,2 @@
+RewriteEngine on
+RewriteRule ^datastore/([^/]+)/([^/]+)/?$ /datastore.php?scope=$1&name=$2 [QSA,L]
