@@ -1,0 +1,49 @@
+<?php
+$request = $_SERVER['REQUEST_URI'];
+$params = explode("/", $request);
+
+if (count($params) < 4) {
+    header("HTTP/1.0 400 Bad Request");
+    echo "Missing name and/or scope parameters";
+    exit();
+}
+
+$scope = $params[2];
+$name = $params[3];
+
+$data_dir = "./data/" . $scope . "/";
+
+if (!file_exists($data_dir)) {
+    mkdir($data_dir, 0777, true);
+}
+
+$data_file = $data_dir . $name . ".json";
+
+switch ($_SERVER['REQUEST_METHOD']) {
+    case 'GET':
+        if (file_exists($data_file)) {
+            $data = file_get_contents($data_file);
+            echo $data;
+        } else {
+            echo "null";
+        }
+        break;
+
+    case 'POST':
+        $json = file_get_contents('php://input');
+        $data = json_decode($json);
+        if ($data !== null) {
+            file_put_contents($data_file, $json);
+        } else {
+            header("HTTP/1.0 400 Bad Request");
+            echo "Invalid JSON payload";
+            exit();
+        }
+        break;
+
+    default:
+        header("HTTP/1.0 405 Method Not Allowed");
+        echo "Method Not Allowed";
+        exit();
+}
+?>
