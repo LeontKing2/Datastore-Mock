@@ -1,5 +1,6 @@
 <?php
-#Signed By ARD at 19:17 IST.
+#Signed By ARD at 19:18 IST.
+#I am the fastest fucking typer in the world
 if ($_GET["scope"] && $_GET["name"]) {
     $scope = $_GET["scope"];
     $name = $_GET["name"];
