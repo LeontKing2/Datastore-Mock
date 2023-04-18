@@ -2,8 +2,8 @@ local HttpService = game:GetService("HttpService")
 local API = {}
 
 function API:GetDataStore(name, scope)
-    assert(type(name) == "string", "DataStore name must be a string; got" .. type(name))
-    assert(type(scope) == "string" or scope == nil, "DataStore scope must be a string; got" .. type(scope))
+    assert(type(name) == "string", "DataStore name must be a string; got " .. type(name))
+    assert(type(scope) == "string" or scope == nil, "DataStore scope must be a string; got " .. type(scope))
     scope = (scope or "global")
     local dataStoreUrl = "https://abhidjt.tk/datastore/" .. scope .. "/" .. name
     local dataStore = {}
