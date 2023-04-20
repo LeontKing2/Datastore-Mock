@@ -1,61 +1,57 @@
 import json
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from flask import Flask, request
 
-data_store = {}
+app = Flask(__name__)
 
-class RequestHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        if self.path == '/favicon.ico':
-            self.send_response(404)
-            self.end_headers()
-        else:
-            key = self.path[1:]
-            if key in data_store:
-                response = {
-                    'status': 'success',
-                    'data': data_store[key]
-                }
-                self.send_response(200)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps(response).encode())
-            else:
-                response = {
-                    'status': 'error',
-                    'message': 'Key not found'
-                }
-                self.send_response(404)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps(response).encode())
+# JSON file to store data
+DATA_FILE = 'data.json'
 
-    def do_POST(self):
-        content_length = int(self.headers['Content-Length'])
-        post_data = self.rfile.read(content_length)
-        data = json.loads(post_data.decode())
-        key = self.path[1:]
-        if key in data_store:
-            response = {
-                'status': 'error',
-                'message': 'Key already exists'
-            }
-            self.send_response(400)
-        else:
-            data_store[key] = data
-            response = {
-                'status': 'success',
-                'message': 'Data created successfully'
-            }
-            self.send_response(201)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        self.wfile.write(json.dumps(response).encode())
+@app.route('/save_data', methods=['POST'])
+def save_data():
+    payload = json.loads(request.data)
+    name = payload['name']
+    scope = payload['scope']
+    key = payload['key']
+    value = payload['value']
+    
+    # Load existing data from the JSON file
+    with open(DATA_FILE, 'r') as f:
+        data = json.load(f)
+    
+    # Save data to the JSON file
+    if scope not in data:
+        data[scope] = {}
+    if name not in data[scope]:
+        data[scope][name] = {}
+    data[scope][name][key] = value
+    
+    with open(DATA_FILE, 'w') as f:
+        json.dump(data, f, indent=4)
+    
+    print(f'Saving data: name={name}, scope={scope}, key={key}, value={value}')
+    return json.dumps({'success': True})
 
-def run(server_class=HTTPServer, handler_class=RequestHandler, port=8000):
-    server_address = ('', port)
-    httpd = server_class(server_address, handler_class)
-    print('Starting server on port', port)
-    httpd.serve_forever()
+@app.route('/get_data', methods=['POST'])
+def get_data():
+    payload = json.loads(request.data)
+    name = payload['name']
+    scope = payload['scope']
+    key = payload['key']
+    
+    # Load data from the JSON file
+    with open(DATA_FILE, 'r') as f:
+        data = json.load(f)
+    
+    # Retrieve data from the JSON file
+    if scope in data and name in data[scope] and key in data[scope][name]:
+        value = data[scope][name][key]
+    else:
+        value = None
+    
+    print(f'Getting data: name={name}, scope={scope}, key={key}, value={value}')
+    
+    # Return the retrieved value or None
+    return json.dumps({'value': value})
 
 if __name__ == '__main__':
-    run()
+    app.run(port=8001, debug=True)
