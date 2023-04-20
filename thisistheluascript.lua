@@ -24,7 +24,7 @@ function API:GetDataStore(name, scope)
                 value = v
             }
             local response = HttpService:RequestAsync({
-                Url = "https://example.com/save_data", -- Replace with your server's URL
+                Url = "https://datastore.abhidjt.tk/save_data", -- Replace with your server's URL
                 Method = "POST",
                 Headers = {
                     ["Content-Type"] = "application/json"
@@ -51,7 +51,7 @@ function API:GetDataStore(name, scope)
                 key = k
             }
             local response = HttpService:RequestAsync({
-                Url = "https://example.com/get_data", -- Replace with your server's URL
+                Url = "https://datastore.abhidjt.tk/get_data", -- Replace with your server's URL
                 Method = "POST",
                 Headers = {
                     ["Content-Type"] = "application/json"
