@@ -2,6 +2,8 @@ local HttpService = game:GetService("HttpService")
 local API = {}
 local MT = {}
 
+local allStores = {} -- Define the global table to store data stores
+
 -----------------------------------------------------------------------------------------------------------
 
 -- API:
