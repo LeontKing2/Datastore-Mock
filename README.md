@@ -10,7 +10,7 @@ Datastore mock i created for austiblox. i guess
 
 ## Examples:
  ```
- *// Might be outdataed//*
+ *// Might be outdated//*
  local DataStore = require(path/to/DataStore) -- Replace with actual path to the datastore script
 
 local globalDataStore = DataStore:GetGlobalDataStore()
