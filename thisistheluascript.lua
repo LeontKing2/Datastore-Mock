@@ -1,85 +1,84 @@
-local HttpService = game:GetService("HttpService")
-local API = {}
-local MT = {}
+-- Mock Roblox Datastore Service using HttpService
 
-local allStores = {} -- Define the global table to store data stores
+-- URL of the web server to send data to
+local WEB_SERVER_URL = "http://example.com/datastore"
 
------------------------------------------------------------------------------------------------------------
+-- Create a mock datastore object
+local DataStoreService = {}
+DataStoreService.__index = DataStoreService
 
--- API:
--- Signed By ARD just 9 days before his birthday
-function API:GetDataStore(name, scope)
-    assert(type(name) == "string", "DataStore name must be a string; got " .. type(name))
-    assert(type(scope) == "string" or scope == nil, "DataStore scope must be a string; got " .. type(scope))
-    scope = (scope or "global")
-    if (allStores[scope] and allStores[scope][name]) then
-        return allStores[scope][name]
-    end
-    local d = {}
-    function d:SetAsync(k, v)
-        assert(v ~= nil, "Value cannot be nil")
-        local success, result = pcall(function()
-            local payload = {
-                name = name,
-                scope = scope,
-                key = k,
-                value = v
-            }
-            local response = HttpService:PostAsync("https://datastore.abhidjt.tk/save_data", HttpService:JSONEncode(payload), Enum.HttpContentType.ApplicationJson)
-            return response and HttpService:JSONDecode(response) or nil
-        end)
-        if not success then
-            error("Failed to set data: " .. result)
-        end
-    end
-    function d:UpdateAsync(k, func)
-        local oldValue = self:GetAsync(k)
-        local v = func(oldValue)
-        assert(v ~= nil, "Value cannot be nil")
-        self:SetAsync(k, v)
-    end
-    function d:GetAsync(k)
-        local success, result = pcall(function()
-            local payload = {
-                name = name,
-                scope = scope,
-                key = k
-            }
-            local response = HttpService:PostAsync("https://datastore.abhidjt.tk/get_data", HttpService:JSONEncode(payload), Enum.HttpContentType.ApplicationJson)
-            return response and HttpService:JSONDecode(response) or nil
-        end)
-        if not success then
-            error("Failed to get data: " .. result)
-        end
-        return result and result.value or nil
-    end
-    function d:IncrementAsync(k, delta)
-        if (delta == nil) then delta = 1 end
-        assert(type(delta) == "number", "Can only increment numbers")
-        local oldValue = self:GetAsync(k)
-        self:SetAsync(k, (oldValue or 0) + delta)
-    end
-    function d:OnUpdate(k, onUpdateFunc)
-        error("OnUpdate is not supported when using HttpService")
-    end
-    if (not allStores[scope]) then
-        allStores[scope] = {}
-    end
-    allStores[scope][name] = d
-    return setmetatable(d, MT)
+-- Datastore constructor
+function DataStoreService.new()
+    local self = setmetatable({}, DataStoreService)
+    return self
 end
 
-function API:GetGlobalDataStore()
-    return self:GetDataStore("global", "global")
+-- HttpService function to send data to the web server
+local function sendToServer(method, key, value)
+    local data = {
+        method = method,
+        key = key,
+        value = value
+    }
+    local success, response = pcall(function()
+        return game:GetService("HttpService"):PostAsync(WEB_SERVER_URL, game:GetService("HttpService"):JSONEncode(data), Enum.HttpContentType.ApplicationJson)
+    end)
+    if success and response then
+        return game:GetService("HttpService"):JSONDecode(response)
+    end
+    return nil
 end
 
-function API:GetOrderedDataStore(name, scope)
-    error("GetOrderedDataStore is not supported when using HttpService")
+-- Mock SetAsync function
+function DataStoreService:SetAsync(key, value)
+    return sendToServer("SetAsync", key, value)
 end
 
------------------------------------------------------------------------------------------------------------
--- Metatable:
+-- Mock GetAsync function
+function DataStoreService:GetAsync(key)
+    return sendToServer("GetAsync", key)
+end
 
-MT.__index = API
+-- Mock UpdateAsync function
+function DataStoreService:UpdateAsync(key, transformFunc)
+    local currentValue = self:GetAsync(key)
+    if currentValue ~= nil then
+        local newValue = transformFunc(currentValue)
+        self:SetAsync(key, newValue)
+        return newValue
+    end
+    return nil
+end
 
-return API
+-- Mock RemoveAsync function
+function DataStoreService:RemoveAsync(key)
+    return sendToServer("RemoveAsync", key)
+end
+
+-- Example usage
+
+--[[
+Create a new datastore object
+local myDatastore = DataStoreService.new()
+
+-- Set a value in the datastore
+myDatastore:SetAsync("Player1", {Coins = 100, Level = 5})
+
+-- Get a value from the datastore
+local playerData = myDatastore:GetAsync("Player1")
+print("Player1 data:", playerData)
+
+-- Update a value in the datastore
+myDatastore:UpdateAsync("Player1", function(currentValue)
+    currentValue.Coins = currentValue.Coins + 50
+    currentValue.Level = currentValue.Level + 1
+    return currentValue
+end)
+playerData = myDatastore:GetAsync("Player1")
+print("Updated Player1 data:", playerData)
+
+-- Remove a value from the datastore
+myDatastore:RemoveAsync("Player1")
+playerData = myDatastore:GetAsync("Player1")
+print("Player1 data after removal:", playerData)
+--]]
