@@ -7,7 +7,7 @@ local allStores = {} -- Define the global table to store data stores
 -----------------------------------------------------------------------------------------------------------
 
 -- API:
-
+-- Signed By ARD just 9 days before his birthday
 function API:GetDataStore(name, scope)
     assert(type(name) == "string", "DataStore name must be a string; got " .. type(name))
     assert(type(scope) == "string" or scope == nil, "DataStore scope must be a string; got " .. type(scope))
@@ -25,15 +25,8 @@ function API:GetDataStore(name, scope)
                 key = k,
                 value = v
             }
-            local response = HttpService:RequestAsync({
-                Url = "https://datastore.abhidjt.tk/save_data", -- Replace with your server's URL
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = HttpService:JSONEncode(payload)
-            })
-            return response.Success and HttpService:JSONDecode(response.Body) or nil
+            local response = HttpService:PostAsync("https://datastore.abhidjt.tk/save_data", HttpService:JSONEncode(payload), Enum.HttpContentType.ApplicationJson)
+            return response and HttpService:JSONDecode(response) or nil
         end)
         if not success then
             error("Failed to set data: " .. result)
@@ -52,15 +45,8 @@ function API:GetDataStore(name, scope)
                 scope = scope,
                 key = k
             }
-            local response = HttpService:RequestAsync({
-                Url = "https://datastore.abhidjt.tk/get_data", -- Replace with your server's URL
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = HttpService:JSONEncode(payload)
-            })
-            return response.Success and HttpService:JSONDecode(response.Body) or nil
+            local response = HttpService:PostAsync("https://datastore.abhidjt.tk/get_data", HttpService:JSONEncode(payload), Enum.HttpContentType.ApplicationJson)
+            return response and HttpService:JSONDecode(response) or nil
         end)
         if not success then
             error("Failed to get data: " .. result)
