@@ -1,9 +1,17 @@
 from flask import Flask, request, jsonify
+import json
 
 app = Flask(__name__)
 
-# Datastore to store key-value pairs
-datastore = {}
+# File path to store data in JSON format
+datastore_file = 'datastore.json'
+
+# Load initial data from JSON file
+try:
+    with open(datastore_file, 'r') as file:
+        datastore = json.load(file)
+except FileNotFoundError:
+    datastore = {}
 
 @app.route('/datastore/set', methods=['POST'])
 def set_data():
@@ -11,6 +19,7 @@ def set_data():
     value = request.form.get('value')
     if key is not None and value is not None:
         datastore[key] = value
+        save_datastore_to_file()
         return 'OK', 200
     else:
         return 'Bad Request', 400
@@ -31,6 +40,7 @@ def update_data():
         current_value = datastore[key]
         current_value.update(value)
         datastore[key] = current_value
+        save_datastore_to_file()
         return 'OK', 200
     else:
         return 'Bad Request', 400
@@ -40,9 +50,14 @@ def remove_data():
     key = request.form.get('key')
     if key is not None and key in datastore:
         del datastore[key]
+        save_datastore_to_file()
         return 'OK', 200
     else:
         return 'Not Found', 404
+
+def save_datastore_to_file():
+    with open(datastore_file, 'w') as file:
+        json.dump(datastore, file)
 
 if __name__ == '__main__':
     app.run(host='localhost', port=8001)
