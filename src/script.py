@@ -5,9 +5,9 @@ app = Quart(__name__)
 
 # Route for saving data to the server
 @app.route('/save', methods=['POST'])
-def save():
+async def save():
     try:
-        data = quart.request.get_json()
+        data = await request.get_json()
         store_name = data.get('storeName')
         store_scope = data.get('storeScope')
         key = data.get('key')
@@ -55,9 +55,9 @@ def save():
 
 # Route for loading data from the server
 @app.route('/load', methods=['POST'])
-def load():
+async def load():
     try:
-        data = quart.request.get_json()
+        data = await request.get_json()
         store_name = data.get('storeName')
         store_scope = data.get('storeScope')
         key = data.get('key')
@@ -83,5 +83,4 @@ def load():
         return jsonify(response), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8001)  # Run the Flask app in debug mode on port 8001 for development
-## Rewritten THe Entire thing!
+    app.run(debug=True, port=8001)  # Run the Quart app in debug mode on port 8001 for development
