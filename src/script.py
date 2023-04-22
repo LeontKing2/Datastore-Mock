@@ -1,13 +1,13 @@
 import json
-from flask import Flask, request, jsonify
+from quart import Quart, request, jsonify
 
-app = Flask(__name__)
+app = Quart(__name__)
 
 # Route for saving data to the server
 @app.route('/save', methods=['POST'])
 def save():
     try:
-        data = request.get_json()
+        data = quart.request.get_json()
         store_name = data.get('storeName')
         store_scope = data.get('storeScope')
         key = data.get('key')
@@ -57,7 +57,7 @@ def save():
 @app.route('/load', methods=['POST'])
 def load():
     try:
-        data = request.get_json()
+        data = quart.request.get_json()
         store_name = data.get('storeName')
         store_scope = data.get('storeScope')
         key = data.get('key')
