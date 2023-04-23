@@ -3,15 +3,13 @@ from quart import Quart, request, jsonify
 import pyodbc
 import sqlite3
 
-#Storage Types = sqlite, sql_server, json
-storage_type="json"
+# Storage Types = sqlite, sql_server, json
+storage_type = "json"
 
 app = Quart(__name__)
 
 def save_to_sql_server(store_name, store_scope, key, value):
     # Establish a connection to SQL Server
-    # Make sure to specify the SQL driver you will be using or pyodbc will be confused af lol
-    # also yeah make sure to specify the database, UID(Userid), PWD(Password) your welcome!
     conn = pyodbc.connect('DRIVER={SQL Server};'
                           'SERVER=<your_server_name>;'
                           'DATABASE=<your_database_name>;'
@@ -94,7 +92,6 @@ def save_to_sqlite(store_name, store_scope, key, value):
 def load_from_sqlite(store_name, store_scope, key):
     # Establish a connection to SQLite database
     conn = sqlite3.connect(f"{store_name}.db")
-    cursor = conn  # Create a cursor to interact with the database
     cursor = conn.cursor()
 
     # Construct the SQL query to select data from the table
@@ -108,53 +105,46 @@ def load_from_sqlite(store_name, store_scope, key):
     # Return the value if found, otherwise return None
     return result[0] if result else None
 
+# Endpoint to save data
 @app.route('/save', methods=['POST'])
 async def save():
-    try:
-        data = await request.get_json()
-        store_name = data.get('storeName')
-        store_scope = data.get('storeScope')
-        key = data.get('key')
-        value = data.get('value')
+    data = await request.form
+    store_name = data['store_name']
+    store_scope = data['store_scope']
+    key = data['key']
+    value = data['value']
 
-        if storage_type == 'sql_server':
-            save_to_sql_server(store_name, store_scope, key, value)
-        elif storage_type == 'json':
-            save_to_json(store_name, store_scope, key, value)
-        elif storage_type == 'sqlite':
-            save_to_sqlite(store_name, store_scope, key, value)
-        else:
-            return jsonify({'error': 'Invalid storage type'})
+    if storage_type == "json":
+        save_to_json(store_name, store_scope, key, value)
+    elif storage_type == "sql_server":
+        save_to_sql_server(store_name, store_scope, key, value)
+    elif storage_type == "sqlite":
+        save_to_sqlite(store_name, store_scope, key, value)
+    else:
+        return jsonify({'error': 'Invalid storage type'})
 
-        return jsonify({'success': True})
+    return jsonify({'result': 'Data saved successfully'})
 
-    except Exception as e:
-        return jsonify({'error': str(e)})
-
-
-# Route for loading data from the server
-@app.route('/load', methods=['POST'])
+# Endpoint to load data
+@app.route('/load', methods=['GET'])
 async def load():
-    try:
-        data = await request.get_json()
-        store_name = data.get('storeName')
-        store_scope = data.get('storeScope')
-        key = data.get('key')
+    store_name = request.args.get('store_name')
+    store_scope = request.args.get('store_scope')
+    key = request.args.get('key')
 
-        if storage_type == 'sql_server':
-            result = load_from_sql_server(store_name, store_scope, key)
-        elif storage_type == 'json':
-            result = load_from_json(store_name, store_scope, key)
-        elif storage_type == 'sqlite':
-            result = load_from_sqlite(store_name, store_scope, key)
-        else:
-            return jsonify({'error': 'Invalid storage type'})
+    if storage_type == "json":
+        value = load_from_json(store_name, store_scope, key)
+    elif storage_type == "sql_server":
+        value = load_from_sql_server(store_name, store_scope, key)
+    elif storage_type == "sqlite":
+        value = load_from_sqlite(store_name, store_scope, key)
+    else:
+        return jsonify({'error': 'Invalid storage type'})
 
-        return jsonify({'data': result})
+    if value is not None:
+        return jsonify({'result': value})
+    else:
+        return jsonify({'error': 'Data not found'})
 
-    except Exception as e:
-        return jsonify({'error': str(e)})
-
-#If you are hosting this on port 80 then remove port=8001
 if __name__ == '__main__':
-    app.run(debug=True, port=8001)
+    app.run(debug=True)
