@@ -73,13 +73,28 @@ def save_to_json(store_name, store_scope, key, value):
         print(f"Error: Failed to save to JSON file. {e}")
 
 # Function to load data from JSON file
-def load_from_json(store_name, store_scope, key):
-    # Load the existing JSON file into memory
-    with open(f"{store_name}.json", 'r') as file:
-        data = json.load(file)
+
+
+def load_from_json(store_name=None, store_scope=None, key=None):
+    if store_name is None:
+        store_name = "default_store_name"  # Set default store_name if not provided
+
+    if store_scope is None:
+        store_scope = "default_store_scope"  # Set default store_scope if not provided
+
+    try:
+        # Try to open the existing JSON file
+        with open(f"{store_name}.json", 'r') as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        # If the JSON file doesn't exist, create an empty dictionary and write it to a new file
+        data = {}
+        with open(f"{store_name}.json", 'w') as file:
+            json.dump(data, file)
 
     # Return the value if found, otherwise return None
     return data.get(store_scope, {}).get(key)
+
 
 # Function to save data to SQLite database
 def save_to_sqlite(store_name, store_scope, key, value):
