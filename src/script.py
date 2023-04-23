@@ -52,18 +52,25 @@ def load_from_sql_server(store_name, store_scope, key):
 
 # Function to save data to JSON file
 def save_to_json(store_name, store_scope, key, value):
-    # Load the existing JSON file into memory
-    with open(f"{store_name}.json", 'r') as file:
-        data = json.load(file)
+    try:
+        # Load the existing JSON file into memory, or create an empty dictionary if the file doesn't exist
+        try:
+            with open(f"{store_name}.json", 'r') as file:
+                data = json.load(file)
+        except FileNotFoundError:
+            data = {}
 
-    # Update the data with the new key-value pair
-    if store_scope not in data:
-        data[store_scope] = {}
-    data[store_scope][key] = value
+        # Update the data with the new key-value pair
+        if store_scope not in data:
+            data[store_scope] = {}
+        data[store_scope][key] = value
 
-    # Write the updated data back to the JSON file
-    with open(f"{store_name}.json", 'w') as file:
-        json.dump(data, file)
+        # Write the updated data back to the JSON file
+        with open(f"{store_name}.json", 'w') as file:
+            json.dump(data, file)
+    except Exception as e:
+        # Print an error message if an error occurs
+        print(f"Error: Failed to save to JSON file. {e}")
 
 # Function to load data from JSON file
 def load_from_json(store_name, store_scope, key):
