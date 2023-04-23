@@ -154,6 +154,6 @@ async def load():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-
+#If you are hosting this on port 80 then remove port=8001
 if __name__ == '__main__':
     app.run(debug=True, port=8001)
