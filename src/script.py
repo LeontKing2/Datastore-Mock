@@ -3,9 +3,13 @@ from quart import Quart, request, jsonify
 import pyodbc
 import sqlite3
 
+#Storage Types = sqlite, sql_server, json
+storage_type="json"
+
 
 def save_to_sql_server(store_name, store_scope, key, value):
     # Establish a connection to SQL Server
+    # Make sure to specify the SQL driver you will be using or pyodbc will be confused af lol
     conn = pyodbc.connect('DRIVER={SQL Server};'
                           'SERVER=<your_server_name>;'
                           'DATABASE=<your_database_name>;'
