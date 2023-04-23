@@ -108,11 +108,10 @@ def load_from_sqlite(store_name, store_scope, key):
 # Endpoint to save data
 @app.route('/save', methods=['POST'])
 async def save():
-    data = await request.form
-    store_name = data['store_name']
-    store_scope = data['store_scope']
-    key = data['key']
-    value = data['value']
+    store_name = request.args.get('storeName')
+    store_scope = request.args.get('storeScope')
+    key = request.args.get('key')
+    value = request.args.get('value')
 
     if storage_type == "json":
         save_to_json(store_name, store_scope, key, value)
@@ -128,8 +127,8 @@ async def save():
 # Endpoint to load data
 @app.route('/load', methods=['GET'])
 async def load():
-    store_name = request.args.get('store_name')
-    store_scope = request.args.get('store_scope')
+    store_name = request.args.get('storeName')
+    store_scope = request.args.get('storeScope')
     key = request.args.get('key')
 
     if storage_type == "json":
