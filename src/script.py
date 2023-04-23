@@ -6,6 +6,7 @@ import sqlite3
 #Storage Types = sqlite, sql_server, json
 storage_type="json"
 
+app = Quart(__name__)
 
 def save_to_sql_server(store_name, store_scope, key, value):
     # Establish a connection to SQL Server
