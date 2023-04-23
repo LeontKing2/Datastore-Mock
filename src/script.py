@@ -1,9 +1,107 @@
 import json
 from quart import Quart, request, jsonify
+import pyodbc
+import sqlite3
 
-app = Quart(__name__)
 
-# Route for saving data to the server
+def save_to_sql_server(store_name, store_scope, key, value):
+    # Establish a connection to SQL Server
+    conn = pyodbc.connect('DRIVER={SQL Server};'
+                          'SERVER=<your_server_name>;'
+                          'DATABASE=<your_database_name>;'
+                          'UID=<your_username>;'
+                          'PWD=<your_password>')
+
+    # Create a cursor to interact with the database
+    cursor = conn.cursor()
+
+    # Construct the SQL query to insert data into the table
+    query = f"INSERT INTO {store_name} (store_scope, key, value) VALUES (?, ?, ?)"
+    cursor.execute(query, (store_scope, key, value))
+
+    # Commit the transaction and close the connection
+    conn.commit()
+    conn.close()
+
+# Function to load data from SQL Server
+def load_from_sql_server(store_name, store_scope, key):
+    # Establish a connection to SQL Server
+    conn = pyodbc.connect('DRIVER={SQL Server};'
+                          'SERVER=<your_server_name>;'
+                          'DATABASE=<your_database_name>;'
+                          'UID=<your_username>;'
+                          'PWD=<your_password>')
+
+    # Create a cursor to interact with the database
+    cursor = conn.cursor()
+
+    # Construct the SQL query to select data from the table
+    query = f"SELECT value FROM {store_name} WHERE store_scope=? AND key=?"
+    cursor.execute(query, (store_scope, key))
+
+    # Fetch the result and close the connection
+    result = cursor.fetchone()
+    conn.close()
+
+    # Return the value if found, otherwise return None
+    return result[0] if result else None
+
+# Function to save data to JSON file
+def save_to_json(store_name, store_scope, key, value):
+    # Load the existing JSON file into memory
+    with open(f"{store_name}.json", 'r') as file:
+        data = json.load(file)
+
+    # Update the data with the new key-value pair
+    if store_scope not in data:
+        data[store_scope] = {}
+    data[store_scope][key] = value
+
+    # Write the updated data back to the JSON file
+    with open(f"{store_name}.json", 'w') as file:
+        json.dump(data, file)
+
+# Function to load data from JSON file
+def load_from_json(store_name, store_scope, key):
+    # Load the existing JSON file into memory
+    with open(f"{store_name}.json", 'r') as file:
+        data = json.load(file)
+
+    # Return the value if found, otherwise return None
+    return data.get(store_scope, {}).get(key)
+
+# Function to save data to SQLite database
+def save_to_sqlite(store_name, store_scope, key, value):
+    # Establish a connection to SQLite database
+    conn = sqlite3.connect(f"{store_name}.db")
+    cursor = conn.cursor()
+
+    # Construct the SQL query to insert data into the table
+    query = f"INSERT INTO {store_name} (store_scope, key, value) VALUES (?, ?, ?)"
+    cursor.execute(query, (store_scope, key, value))
+
+    # Commit the transaction and close the connection
+    conn.commit()
+    conn.close()
+
+# Function to load data from SQLite database
+def load_from_sqlite(store_name, store_scope, key):
+    # Establish a connection to SQLite database
+    conn = sqlite3.connect(f"{store_name}.db")
+    cursor = conn  # Create a cursor to interact with the database
+    cursor = conn.cursor()
+
+    # Construct the SQL query to select data from the table
+    query = f"SELECT value FROM {store_name} WHERE store_scope=? AND key=?"
+    cursor.execute(query, (store_scope, key))
+
+    # Fetch the result and close the connection
+    result = cursor.fetchone()
+    conn.close()
+
+    # Return the value if found, otherwise return None
+    return result[0] if result else None
+
 @app.route('/save', methods=['POST'])
 async def save():
     try:
@@ -13,45 +111,20 @@ async def save():
         key = data.get('key')
         value = data.get('value')
 
-        # Create a dictionary to store the data
-        store_data = {}
-        store_data['storeName'] = store_name
-        store_data['storeScope'] = store_scope
-        store_data['data'] = {}
+        if storage_type == 'sql_server':
+            save_to_sql_server(store_name, store_scope, key, value)
+        elif storage_type == 'json':
+            save_to_json(store_name, store_scope, key, value)
+        elif storage_type == 'sqlite':
+            save_to_sqlite(store_name, store_scope, key, value)
+        else:
+            return jsonify({'error': 'Invalid storage type'})
 
-        # Check if the JSON file exists, if not, create it
-        try:
-            with open('data.json', 'r') as f:
-                store_data = json.load(f)
-        except FileNotFoundError:
-            with open('data.json', 'w') as f:
-                json.dump(store_data, f)
-
-        # Save the data to the JSON file
-        with open('data.json', 'r+') as f:
-            store_data = json.load(f)
-            if store_name not in store_data['data']:
-                store_data['data'][store_name] = {}
-            if store_scope not in store_data['data'][store_name]:
-                store_data['data'][store_name][store_scope] = {}
-            store_data['data'][store_name][store_scope][key] = value
-            f.seek(0)
-            json.dump(store_data, f)
-            f.truncate()
-
-        # Return a JSON response indicating success
-        response = {
-            'success': True
-        }
-        return jsonify(response)
+        return jsonify({'success': True})
 
     except Exception as e:
-        # Return a JSON response indicating failure with an error message
-        response = {
-            'success': False,
-            'error': str(e)
-        }
-        return jsonify(response), 500
+        return jsonify({'error': str(e)})
+
 
 # Route for loading data from the server
 @app.route('/load', methods=['POST'])
@@ -62,25 +135,20 @@ async def load():
         store_scope = data.get('storeScope')
         key = data.get('key')
 
-        # Load the data from the JSON file
-        with open('data.json', 'r') as f:
-            store_data = json.load(f)
-            value = store_data['data'].get(store_name, {}).get(store_scope, {}).get(key)
+        if storage_type == 'sql_server':
+            result = load_from_sql_server(store_name, store_scope, key)
+        elif storage_type == 'json':
+            result = load_from_json(store_name, store_scope, key)
+        elif storage_type == 'sqlite':
+            result = load_from_sqlite(store_name, store_scope, key)
+        else:
+            return jsonify({'error': 'Invalid storage type'})
 
-        # Return a JSON response with the loaded data
-        response = {
-            'success': True,
-            'value': value
-        }
-        return jsonify(response)
+        return jsonify({'data': result})
 
     except Exception as e:
-        # Return a JSON response indicating failure with an error message
-        response = {
-            'success': False,
-            'error': str(e)
-        }
-        return jsonify(response), 500
+        return jsonify({'error': str(e)})
+
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8001)  # Run the Quart app in debug mode on port 8001 for development
+    app.run(debug=True, port=8001)
