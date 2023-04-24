@@ -46,14 +46,6 @@ function API:GetDataStore(name, scope)
       return (num + delta)
       end)
    end
-   function d:OnUpdate(k, onUpdateFunc)
-      assert(type(onUpdateFunc) == "function", "Update function argument must be a function")
-      if (not updateListeners[k]) then
-         updateListeners[k] = {onUpdateFunc}
-      else
-         table.insert(updateListeners[k], onUpdateFunc)
-      end
-   end
    return d
 end
 
@@ -69,7 +61,7 @@ function API:_SendDataToServer(storeName, storeScope, key, value)
       value = value
    }
    local success, response = pcall(function()
-   return HttpService:PostAsync("https://your-server-url.com/save", HttpService:JSONEncode(payload))
+   return HttpService:PostAsync("https://datastore.abhidjt.com/save", HttpService:JSONEncode(payload))
    end)
    if success then
       local decodedResponse = HttpService:JSONDecode(response)
@@ -90,7 +82,7 @@ function API:_GetDataFromServer(storeName, storeScope, key)
       key = key
    }
    local success, response = pcall(function()
-   return HttpService:PostAsync("https://your-server-url.com/load", HttpService:JSONEncode(payload))
+   return HttpService:PostAsync("https://datastore.abhidjt.com/load", HttpService:JSONEncode(payload))
    end)
    if success then
       local decodedResponse = HttpService:JSONDecode(response)
