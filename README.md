@@ -1,6 +1,6 @@
 # Datastore-Mock
 Datastore mock i created for austiblox. i guess
-
+## Warning! This is for personal use only(by that i mean no other game can connect to your python script unless you host another one with a different port)
 
 ## How to use:
 1. Start the python script(make sure to install em flask package)
