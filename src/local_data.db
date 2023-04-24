@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS local_data (
+    store_name TEXT,
+    key TEXT,
+    value TEXT
+);
