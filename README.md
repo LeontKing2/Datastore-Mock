@@ -26,3 +26,4 @@ local playerCount = globalDataStore:GetAsync("PlayerCount")
 print(hello) -- Output: world
 print(playerCount) -- Output: 10
  ```
+## This is based of off thexkey's repo. thanks
