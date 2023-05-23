@@ -1,73 +1,42 @@
-from quart import Quart, request, jsonify
+import os
 import json
-import sqlite3
+from flask import Flask, request, jsonify
 
-app = Quart(__name__)
+app = Flask(__name__)
 
-# Connect to SQLite database
-conn = sqlite3.connect('datastore.db')
-c = conn.cursor()
+DATA_DIR = "datastore"  # Directory to store the JSON files
+PORT = 8002  # Port number for the server
 
-# Create a table for data storage
-c.execute('''CREATE TABLE IF NOT EXISTS data_store
-             (key TEXT PRIMARY KEY, value TEXT)''')
-conn.commit()
+def get_file_path(game_id, key):
+    game_dir = os.path.join(DATA_DIR, game_id)
+    os.makedirs(game_dir, exist_ok=True)
+    file_path = os.path.join(game_dir, key + ".json")
+    return file_path
 
-# Create a JSON file if missing
-try:
-    with open('datastore.json', 'r') as f:
-        pass
-except FileNotFoundError:
-    with open('datastore.json', 'w') as f:
-        json.dump({}, f)
+@app.route("/datastore/<game_id>/<key>", methods=["GET"])
+def get_data(game_id, key):
+    file_path = get_file_path(game_id, key)
+    if os.path.isfile(file_path):
+        with open(file_path, "r") as file:
+            data = json.load(file)
+            return jsonify(data)
+    else:
+        return jsonify(None)
 
-@app.route('/datastore', methods=['POST'])
-async def store_data():
-    try:
-        data = await request.get_json()
-        if 'key' not in data or 'value' not in data:
-            return 'Error: Invalid payload', 400
+@app.route("/datastore/<game_id>/<key>", methods=["POST"])
+def set_data(game_id, key):
+    data = request.get_json()
+    file_path = get_file_path(game_id, key)
+    with open(file_path, "w") as file:
+        json.dump(data, file)
+    return jsonify(data)
 
-        key = data['key']
-        value = data['value']
+@app.route("/datastore/<game_id>/<key>", methods=["DELETE"])
+def delete_data(game_id, key):
+    file_path = get_file_path(game_id, key)
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+    return jsonify(None)
 
-        # Store data in JSON file
-        with open('datastore.json', 'r+') as f:
-            datastore = json.load(f)
-            datastore[key] = value
-            f.seek(0)
-            json.dump(datastore, f, indent=4)
-
-        # Store data in SQLite database
-        c.execute("INSERT OR REPLACE INTO data_store (key, value) VALUES (?, ?)",
-                  (key, json.dumps(value)))
-        conn.commit()
-
-        return 'Success', 200
-    except Exception as e:
-        return f'Error: {e}', 500
-
-
-@app.route('/datastore/<key>', methods=['GET'])
-async def get_data(key):
-    try:
-        # Retrieve data from JSON file
-        with open('datastore.json', 'r') as f:
-            datastore = json.load(f)
-            value_json = datastore.get(key)
-
-        # Retrieve data from SQLite database
-        c.execute("SELECT value FROM data_store WHERE key=?", (key,))
-        value_db = c.fetchone()
-
-        if value_json is None and value_db is None:
-            return 'Error: Key not found', 404
-
-        # Return data as JSON
-        return jsonify({'key': key, 'value_json': value_json, 'value_db': json.loads(value_db[0])}), 200
-    except Exception as e:
-        return f'Error: {e}', 500
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run(port=PORT)
