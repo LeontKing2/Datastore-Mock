@@ -1,5 +1,6 @@
 # Datastore-Mock
 Datastore mock i created for austiblox. i guess
+## UPDATE 23/5/23 I managed to do this for multiple games so you can let other people use your datastore server for their games. ez and you are welcome
 ## Warning! This is for personal use only(by that i mean no other game can connect to your python script unless you host another one with a different port)
 
 ## How to use:
@@ -11,19 +12,6 @@ Datastore mock i created for austiblox. i guess
 ## Examples:
  ```
  *// Might be outdated//*
- local DataStore = require(path/to/DataStore) -- Replace with actual path to the datastore script
-
-local globalDataStore = DataStore:GetGlobalDataStore()
-
--- Set some data
-globalDataStore:SetAsync("Hello", "world")
-globalDataStore:SetAsync("PlayerCount", 10)
-
--- Get the data
-local hello = globalDataStore:GetAsync("Hello")
-local playerCount = globalDataStore:GetAsync("PlayerCount")
-
-print(hello) -- Output: world
-print(playerCount) -- Output: 10
+  TODO
  ```
 ## This is based of off thexkey's repo. thanks
